@@ -1,0 +1,124 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>de.pdbm</groupId>
+	<artifactId>strings</artifactId>
+	<version>0.1</version>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<maven-compiler-plugin.version>3.10.1</maven-compiler-plugin.version>
+		<maven-surefire-plugin.version>3.0.0-M7</maven-surefire-plugin.version>
+		<maven-javadoc-plugin.version>3.4.1</maven-javadoc-plugin.version>
+		<maven.compiler.release>19</maven.compiler.release>
+		<junit.version>5.7.1</junit.version>
+	</properties>
+
+
+	<dependencies>
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-api</artifactId>
+			<version>${junit.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-engine</artifactId>
+			<version>${junit.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+	</dependencies>
+
+
+	<build>
+		<finalName>string-impl</finalName>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>${maven-compiler-plugin.version}</version>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<version>3.1.0</version>
+				<executions>
+					<execution>
+						<id>table-statistics</id>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<configuration>
+							<target>
+								<java classname="de.pdbm.StringTableStatistics" fork="true" classpath="target/classes" >
+									<jvmarg value="-XX:+PrintStringTableStatistics" />
+									<!-- <jvmarg value="-XX:StringTableSize=131072" /> -->
+									<!-- steps: 16607, 32769, 65536, 131072 -->
+								</java>
+							</target>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>${maven-surefire-plugin.version}</version>
+				<configuration>
+        			<forkNode implementation="org.apache.maven.plugin.surefire.extensions.SurefireForkNodeFactory"/>
+      			</configuration>
+				<executions>
+					<execution>
+						<!-- skip all other tests and do nothing - because of different VM args -->
+						<id>default-test</id>
+						<configuration>
+							<skip>true</skip>
+						</configuration>
+					</execution>
+					<execution>
+						<id>encoding</id>
+						<configuration>
+							<includes>
+								<include>**/EncodingTest.java</include>
+							</includes>
+							<argLine>--add-opens java.base/java.lang=ALL-UNNAMED</argLine>
+						</configuration>
+					</execution>
+					<execution>
+						<id>deduplication</id>
+						<configuration>
+							<includes>
+								<include>**/DeduplicationTest.java</include>
+							</includes>
+							<argLine>-Xmx256M -XX:+UseG1GC -XX:+UseStringDeduplication -Xlog:stringdedup*=debug --add-opens java.base/java.lang=ALL-UNNAMED</argLine>
+						</configuration>
+					</execution>
+					<execution>
+						<id>pool</id>
+						<configuration>
+							<includes>
+								<include>**/PoolTest.java</include>
+							</includes>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>${maven-javadoc-plugin.version}</version>
+				<configuration>
+					<header>Strings</header>
+					<doclint>none</doclint>
+				</configuration>
+			</plugin>
+
+		</plugins>
+	</build>
+
+</project>
